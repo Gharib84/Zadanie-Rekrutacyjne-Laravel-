@@ -1,1 +1,1 @@
-# Zadanie Rekrutacyjne Laravel 7 🚀
+# Zadanie Rekrutacyjne Laravel 12 🚀
