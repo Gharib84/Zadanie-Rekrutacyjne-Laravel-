@@ -10,22 +10,23 @@ use Illuminate\View\View;
 class PetsController extends Controller
 {
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus', [
-            'findByStatus' => 'available'
+        $page = $request->get('page', 1);
+        $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus?', [
+            'status' => 'available',
+            'page' => $page,
+            'per_page' => 10
         ]);
 
         $data = $response->json();
+        $total = count($data);
 
-        if ($response->successful()) {
-            return view('welcome', [
-                'pets' => $data
-            ]);
-        }
+        dump($total);
+        die();
 
         return view('welcome', [
-            'pets' => []
+            'pets' => $data
         ]);
     }
 }
