@@ -21,12 +21,13 @@ class PetsController extends Controller
 
         $data = $response->json();
         $total = count($data);
-
-        dump($total);
-        die();
+        $totalPages = ceil($total / 10);
 
         return view('welcome', [
-            'pets' => $data
+            'pets' => $data,
+            'total' => $total,
+            'currentPage' => $page,
+            'totalPages' => $totalPages
         ]);
     }
 }
