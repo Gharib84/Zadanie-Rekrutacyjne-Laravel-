@@ -15,7 +15,6 @@ class PetsController extends Controller
     {
         $page = $request->get('page', 1);
         $perPage = 10;
-
         $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus?', [
             'status' => 'available'
         ]);
