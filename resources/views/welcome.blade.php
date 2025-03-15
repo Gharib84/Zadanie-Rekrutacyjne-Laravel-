@@ -34,7 +34,7 @@
                         <td>{{ $pet['category']['name'] ?? 'brak' }}</td>
                         <td>
                             @foreach ($pet['photoUrls'] as $photoUrl)
-                            <a href="{{ $photoUrl }}" class="text-yellow-500 font-bold">{{ $photoUrl ?? 'brak' }}</a>
+                            <a href="{{ $photoUrl ?? 'brak' }}" class="text-yellow-500 font-bold">{{ $photoUrl ?? 'brak' }}</a>
                             @endforeach
                         </td>
                         <td>
@@ -42,7 +42,7 @@
                             {{ $tag['name'] ?? 'brak' }}<br>
                             @endforeach
                         </td>
-                        <td>{{ $pet['status']}}</td>
+                        <td>{{ $pet['status'] ?? 'brak' }}</td>
                         <td class="flex gap-2">
                             <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
                             <form  method="post">
