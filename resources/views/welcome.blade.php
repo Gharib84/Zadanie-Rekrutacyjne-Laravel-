@@ -34,7 +34,7 @@
                         <td>{{ $pet['category']['name'] ?? 'brak' }}</td>
                         <td>
                             @foreach ($pet['photoUrls'] as $photoUrl)
-                            {{ $photoUrl ?? 'brak' }}<br>
+                            <a href="{{ $photoUrl }}" class="text-yellow-500 font-bold">{{ $photoUrl ?? 'brak' }}</a>
                             @endforeach
                         </td>
                         <td>
@@ -43,7 +43,8 @@
                             @endforeach
                         </td>
                         <td>{{ $pet['status']}}</td>
-                        <td>
+                        <td class="flex gap-2">
+                            <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
                             <form  method="post">
                                 @csrf
                                 @method('DELETE')
