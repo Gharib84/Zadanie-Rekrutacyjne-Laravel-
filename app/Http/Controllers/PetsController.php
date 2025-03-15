@@ -14,12 +14,22 @@ class PetsController extends Controller
     {
         $page = $request->get('page', 1);
         $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus?', [
-            'status' => 'available',
+            'status' => 'pending',
             'page' => $page,
             'per_page' => 10
         ]);
 
         $data = $response->json();
+
+        // Ensure all pets have a category and name key
+        $data = array_map(function ($pet) {
+            $pet['category'] = $pet['category'] ?? ['name' => 'brak'];
+            $pet['name'] = $pet['name'] ?? 'brak';
+            $pet['photoUrls'] = $pet['photoUrls'] ?? 'brak';
+            
+            return $pet;
+        }, $data);
+
         $total = count($data);
         $totalPages = ceil($total / 10);
 
