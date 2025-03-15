@@ -3,4 +3,4 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PetsController;
 
-Route::get('/', [PetsController::class, 'index']);
+Route::match(['get', 'post'],'/', [PetsController::class, 'index']);

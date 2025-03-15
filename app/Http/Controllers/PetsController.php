@@ -5,18 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Response;
-use Illuminate\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class PetsController extends Controller
 {
-
-    public function index(Request $request): View
+    public function index(Request $request)
     {
+        $statusValue = $request->input('status', 'available');
         $page = $request->get('page', 1);
         $perPage = 10;
-        $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus?', [
-            'status' => 'available'
+
+        $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus', [
+            'status' => $statusValue
         ]);
 
         $data = $response->json();
@@ -26,7 +26,7 @@ class PetsController extends Controller
             $pet['photoUrls'] = $pet['photoUrls'] ?? 'brak';
             return $pet;
         }, $data);
-    
+
         $total = count($data);
         $offset = ($page - 1) * $perPage;
         $items = array_slice($data, $offset, $perPage);
@@ -35,6 +35,10 @@ class PetsController extends Controller
             'path' => $request->url(),
             'query' => $request->query(),
         ]);
+
+        if ($request->isMethod('post')) {
+            return response()->json(['pets' => $paginator]);
+        }
 
         return view('welcome', [
             'pets' => $paginator

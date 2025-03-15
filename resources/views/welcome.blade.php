@@ -14,9 +14,9 @@
             <div class="filter w-full lg:w-auto">
                 <select class="select select-success">
                     <option disabled selected>Pick a Runtime</option>
-                    <option>available</option>
-                    <option>pending</option>
-                    <option>sold</option>
+                    <option value="available">available</option>
+                    <option value="pending">pending</option>
+                    <option value="sold">sold</option>
                 </select>
             </div>
             <div class="header">
@@ -25,7 +25,6 @@
             <div class="action">
                 action
             </div>
-
         </div>
         <div class="grid grid-cols-1 gap-4">
             <div class="overflow-x-auto">
@@ -42,7 +41,7 @@
                             <td class="text-green-500">przycisk akcji</td>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="pets-table-body">
                         @foreach ($pets as $pet)
                         <tr>
                             <td>{{ $pet['id'] }}</td>
@@ -81,10 +80,49 @@
     <script> 
         document.addEventListener('DOMContentLoaded', () => {
             const select = document.querySelector('.select');
-             select.addEventListener('change', () => {
-                 const selectedValue = select.value;
-                 console.log(selectedValue);
-             })
+            select.addEventListener('change', () => {
+                const selectedValue = select.value;
+                console.log(selectedValue);
+
+                const filterData = async () => {
+                    const response = await fetch('http://127.0.0.1:8000/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            status: selectedValue
+                        })
+                    });
+
+                    const data = await response.json();
+                    const petsTableBody = document.getElementById('pets-table-body');
+                    petsTableBody.innerHTML = '';
+
+                    data.pets.data.forEach(pet => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${pet.id}</td>
+                            <td>${pet.name}</td>
+                            <td>${pet.category.name ?? 'brak'}</td>
+                            <td>${pet.photoUrls.map(url => `<a href="${url}" class="text-yellow-500 font-bold">${url}</a>`).join('<br>')}</td>
+                            <td>${pet.tags.map(tag => `${tag.name ?? 'brak'}`).join('<br>')}</td>
+                            <td>${pet.status ?? 'brak'}</td>
+                            <td class="flex gap-2">
+                                <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
+                                <form method="post">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-soft btn-error text-white">Usuń</button>
+                                </form>
+                            </td>
+                        `;
+                        petsTableBody.appendChild(row);
+                    });
+                }
+                filterData();
+            });
         });
     </script>
 </body>
