@@ -8,7 +8,6 @@
 </head>
 
 <body>
-</body>
 <div class="container mx-auto w-full p-10 h-screen mt-16">
     <h1 class="text-3xl text-center w-full mx-auto">Zadanie Rekrutacyjne Laravel</h1>
     <div class="grid grid-cols-1 gap-4">
@@ -45,7 +44,7 @@
                         <td>{{ $pet['status'] ?? 'brak' }}</td>
                         <td class="flex gap-2">
                             <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
-                            <form  method="post">
+                            <form method="post">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-soft btn-error text-white">Usuń</button>
@@ -55,8 +54,12 @@
                     @endforeach
                 </tbody>
             </table>
+            <div class="mt-4">
+                {{ $pets->links() }}
+            </div>
         </div>
     </div>
 </div>
+</body>
 
 </html>
