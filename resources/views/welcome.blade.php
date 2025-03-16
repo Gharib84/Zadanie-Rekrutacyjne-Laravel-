@@ -22,8 +22,8 @@
             <div class="header">
                 <h1 class="text-3xl">Zadanie Rekrutacyjne Laravel</h1>
             </div>
-            <div class="action">
-                action
+            <div class="action w-full  lg:w-auto">
+            <button class="btn btn-active btn-warning w-full lg:w-auto text-blue-900 font-bold">dodaj</button>
             </div>
         </div>
         <div class="grid grid-cols-1 gap-4">
