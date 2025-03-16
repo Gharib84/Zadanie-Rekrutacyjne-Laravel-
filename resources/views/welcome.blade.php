@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/pet.js'])
 </head>
 
 <body>
@@ -81,7 +81,7 @@
         <div class="modal-box">
             <h3 class="text-lg font-bold text-yellow-500">Stworz nowego peta</h3>
             <p class="py-4">
-            <form action="">
+            <form action="" id="create_pet">
             <fieldset class="fieldset">
                     <legend class="fieldset-legend">Pet szczegóły</legend>
                     <input type="text" name="name" class="input w-full" placeholder="Name" required />

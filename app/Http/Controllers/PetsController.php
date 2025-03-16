@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
+
 
 class PetsController extends Controller
 {
@@ -43,5 +45,17 @@ class PetsController extends Controller
         return view('welcome', [
             'pets' => $paginator
         ]);
+    }
+
+    public function store(Request $request):JsonResponse
+    {
+        $petData = $request->all();
+        $response = Http::post('https://petstore.swagger.io/v2/pet', $petData);
+
+        if($response->successful()) {
+            return response()->json(['message' => 'pet created successfully'], Response::HTTP_CREATED);
+        }
+
+        return response()->json(['message' => 'Failed to create pet'], 500);
     }
 }
