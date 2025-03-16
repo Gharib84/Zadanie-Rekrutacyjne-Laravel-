@@ -82,9 +82,17 @@
             <h3 class="text-lg font-bold text-yellow-500">Stworz nowego peta</h3>
             <p class="py-4">
             <form action="">
-                <fieldset class="fieldset">
-                    <legend class="fieldset-legend">What is your name?</legend>
-                    <input type="text" class="input w-full" placeholder="Type here" />
+            <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Pet szczegóły</legend>
+                    <input type="text" name="name" class="input w-full" placeholder="Name" required />
+                    <input type="text" name="category" class="input w-full mt-2" placeholder="Category" required />
+                    <input type="text" name="photoUrls" class="input w-full mt-2" placeholder="Photo URLs (comma separated)" required />
+                    <input type="text" name="tags" class="input w-full mt-2" placeholder="Tags (comma separated)" required />
+                    <select name="status" class="select select-success w-full mt-2" required>
+                        <option value="available">available</option>
+                        <option value="pending">pending</option>
+                        <option value="sold">sold</option>
+                    </select>
                 </fieldset>
             </form>
             </p>
