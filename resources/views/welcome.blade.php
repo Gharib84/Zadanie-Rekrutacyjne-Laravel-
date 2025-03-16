@@ -23,7 +23,7 @@
                 <h1 class="text-3xl">Zadanie Rekrutacyjne Laravel</h1>
             </div>
             <div class="action w-full  lg:w-auto">
-            <button class="btn btn-active btn-warning w-full lg:w-auto text-blue-900 font-bold" onclick="add_new_pet.showModal()">dodaj</button>
+                <button class="btn btn-active btn-warning w-full lg:w-auto text-blue-900 font-bold" onclick="add_new_pet.showModal()">dodaj</button>
             </div>
         </div>
         <div class="grid grid-cols-1 gap-4">
@@ -77,22 +77,27 @@
         </div>
     </div>
     <!-- Open the modal using ID.showModal() method -->
-<dialog id="add_new_pet" class="modal modal-bottom sm:modal-middle">
-  <div class="modal-box">
-    <h3 class="text-lg font-bold">Stworz nowego peta</h3>
-    <p class="py-4">
-        
-    </p>
-    <div class="modal-action">
-      <form method="dialog">
-        <!-- if there is a button in form, it will close the modal -->
-        <button class="btn">Close</button>
-      </form>
-    </div>
-  </div>
-</dialog>
+    <dialog id="add_new_pet" class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box">
+            <h3 class="text-lg font-bold text-yellow-500">Stworz nowego peta</h3>
+            <p class="py-4">
+            <form action="">
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">What is your name?</legend>
+                    <input type="text" class="input w-full" placeholder="Type here" />
+                </fieldset>
+            </form>
+            </p>
+            <div class="modal-action">
+                <form method="dialog">
+                    <!-- if there is a button in form, it will close the modal -->
+                    <button class="btn">Close</button>
+                </form>
+            </div>
+        </div>
+    </dialog>
     <!--javascript-->
-    <script> 
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const select = document.querySelector('.select');
             select.addEventListener('change', () => {
@@ -141,4 +146,5 @@
         });
     </script>
 </body>
+
 </html>
