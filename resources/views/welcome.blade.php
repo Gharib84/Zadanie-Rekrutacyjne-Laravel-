@@ -98,6 +98,7 @@
             </p>
             <div class="modal-action">
                 <form method="dialog">
+                    <button class="btn btn-primary" id="create">Save</button>
                     <!-- if there is a button in form, it will close the modal -->
                     <button class="btn">Close</button>
                 </form>
