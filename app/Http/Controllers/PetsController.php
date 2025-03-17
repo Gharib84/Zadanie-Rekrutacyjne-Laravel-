@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Redirect;
 
 
 class PetsController extends Controller
@@ -47,15 +50,48 @@ class PetsController extends Controller
         ]);
     }
 
-    public function store(Request $request):JsonResponse
+    public function store(Request $request)
     {
-        $petData = $request->all();
+        $petData = [
+            'name' => $request->input('name'),
+            'category' => ['name' => $request->input('category')],
+            'photoUrls' => explode(',', $request->input('photoUrls')),
+            'tags' => array_map(function ($tag) {
+                return ['name' => trim($tag)];
+            }, explode(',', $request->input('tags'))),
+            'status' => $request->input('status')
+        ];
+        
         $response = Http::post('https://petstore.swagger.io/v2/pet', $petData);
 
-        if($response->successful()) {
-            return response()->json(['message' => 'pet created successfully'], Response::HTTP_CREATED);
+        if ($response->successful()) {
+            return Redirect::route('pets.index')->with('success', 'Pet created successfully');
         }
 
-        return response()->json(['message' => 'Failed to create pet'], 500);
+        return Redirect::route('pets.index')->with('error', 'Failed to create pet');
+    }
+
+    //edit
+    public function edit($id)
+    {
+        $response = Http::get('https://petstore.swagger.io/v2/pet/' . $id);
+
+        if ($response->successful()) {
+            return response()->json(['pet' => $response->json()]);
+        }
+
+        return response()->json(['error' => 'Failed to fetch pet'], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }   
+
+    //delete
+    public function destroy($id)
+    {
+        $response = Http::delete('https://petstore.swagger.io/v2/pet/' . $id);
+
+        if ($response->successful()) {
+            return Redirect::route('pets.index')->with('success', 'Pet deleted successfully');
+        }
+
+        return Redirect::route('pets.index')->with('error', 'Failed to delete pet');
     }
 }

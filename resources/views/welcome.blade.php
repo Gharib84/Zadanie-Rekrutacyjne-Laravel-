@@ -81,7 +81,8 @@
         <div class="modal-box">
             <h3 class="text-lg font-bold text-yellow-500">Stworz nowego peta</h3>
             <p class="py-4">
-            <form action="{{ route('pets.store')}}" method="post" id="create_pet">
+            <form action="{{ route('pets.store') }}" method="post" id="create_pet">
+                @csrf
             <fieldset class="fieldset">
                     <legend class="fieldset-legend">Pet szczegóły</legend>
                     <input type="text" name="name" class="input w-full" placeholder="Name" required />
@@ -94,15 +95,13 @@
                         <option value="sold">sold</option>
                     </select>
                 </fieldset>
-            </form>
-            </p>
-            <div class="modal-action">
-                <form method="dialog">
-                    <button type="submit" class="btn btn-primary" id="create">Save</button>
+                <div class="modal-action">
+                    <button class="btn btn-primary"type="submit">Save</button>
                     <!-- if there is a button in form, it will close the modal -->
                     <button class="btn">Close</button>
-                </form>
             </div>
+            </form>
+            </p>
         </div>
     </dialog>
     <!--javascript-->
@@ -155,5 +154,4 @@
         });
     </script>
 </body>
-
 </html>
