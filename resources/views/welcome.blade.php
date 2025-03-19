@@ -72,10 +72,41 @@
                             </td>
                             <td>{{ $pet['status'] ?? 'brak' }}</td>
                             <td class="flex gap-2">
-                                <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
+                                <button class="btn btn-soft btn-info text-white"
+                                    onclick="document.getElementById(`edit_pet_{{$pet['id']}}`).showModal()">
+                                    Edytuj
+                                </button>
+
                                 <button class="btn btn-soft btn-error text-white delete-pet-button" data-pet-id="{{ $pet['id'] }}" onclick="deletePet( `{{$pet['id']}}`)">Usuń</button>
                             </td>
                         </tr>
+                        <!-- Global Edit Modal -->
+                        <!--edit modal for pet-->
+                        <dialog id="edit_pet_{{$pet['id']}}" class="modal modal-bottom sm:modal-middle">
+                            <div class="modal-box">
+                                <h3 class="text-lg font-bold text-yellow-500">Edytuj peta: {{ $pet['name'] }}</h3>
+                                <p class="py-4">
+                                <form id="edit-pet-form" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="id" value="{{ $pet['id'] }}" id="edit-pet-id">
+                                    <fieldset class="fieldset">
+                                        <legend class="fieldset-legend">Pet szczegóły</legend>
+                                        <input type="text" name="name" id="edit-pet-name" class="input w-full" placeholder="Name" required />
+                                        <select name="status" id="edit-pet-status" class="select select-success w-full mt-2" required>
+                                            <option value="available">available</option>
+                                            <option value="pending">pending</option>
+                                            <option value="sold">sold</option>
+                                        </select>
+                                    </fieldset>
+                                    <div class="modal-action">
+                                        <button type="button" class="btn btn-primary" onclick="editPet( $pet['id'])">Edytuj</button>
+                                        <button type=" button" class="btn" onclick="edit_pet.close()">Close</button>
+                                    </div>
+                                </form>
+                                </p>
+                            </div>
+                        </dialog>
                         @endforeach
                     </tbody>
                 </table>
@@ -112,12 +143,21 @@
             </p>
         </div>
     </dialog>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('create-pet-form');
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 await submitPetForm();
+            });
+
+            const editFornm = document.getElementById('edit-pet-form');
+            const editId = document.getElementById('edit-pet-button');
+            const id = editId.dataset.petIds;
+            editFornm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                await editPet(editId.dataset.petIds);
             });
 
             loadPetsFromSessionStorage();
@@ -197,30 +237,82 @@
             petsTableBody.appendChild(row);
         }
 
-        async function deletePet(id) {
-    try {
-        const response = await fetch(`http://127.0.0.1:8000/destroy/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-        });
+        async function editPet(id) {
+            const editForm = document.getElementById('edit-pet-form');
+            const form = new FormData(editForm);
+            const petData = {
+                name: form.get('name'),
+                status: form.get('status'),
+            }
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/edit/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify(petData),
+                });
 
-        const data = await response.json();
-        if (response.ok) {
-            alert(data.message || 'Pet deleted successfully');
-            document.getElementById(`pet-row-${id}`).remove();
-            removePetFromSessionStorage(id);
-        } else {
-            alert(data.message || 'Failed to delete pet');
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new TypeError('The server did not return a valid JSON response.');
+                }
+
+                const data = await response.json();
+                console.log(data);
+                if (!response.ok) {
+                    if (data.errors) {
+                        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+                        for (const [field, errors] of Object.entries(data.errors)) {
+                            const errorElement = document.getElementById(`${field}-error`);
+                            if (errorElement) {
+                                errorElement.textContent = errors[0];
+                            }
+                        }
+                    } else {
+                        alert(data.message || 'Failed to create pet');
+                    }
+                } else {
+                    alert(data.message || 'Pet created successfully');
+                    editForm.reset();
+                    addPetToTable(data.data);
+                    savePetToSessionStorage(data.data);
+                    edit_pet_`${id}`.close();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An unexpected error occurred. Please try again.');
-    }
-}
+
+        async function deletePet(id) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/destroy/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message || 'Pet deleted successfully');
+                    document.getElementById(`pet-row-${id}`).remove();
+                    removePetFromSessionStorage(id);
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to delete pet');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            }
+        }
+
         function savePetToSessionStorage(pet) {
             let pets = JSON.parse(sessionStorage.getItem('pets')) || [];
             pets.push(pet);
@@ -238,7 +330,6 @@
             sessionStorage.setItem('pets', JSON.stringify(pets));
         }
     </script>
-
 </body>
 
 </html>

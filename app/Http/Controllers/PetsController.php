@@ -89,4 +89,29 @@ class PetsController extends Controller
             'message' => 'Failed to delete pet',
         ], 500);
     }
+
+    //edit pet 
+    public function edit(Request $request, $id): JsonResponse
+    {
+        $petData = [
+            'name' => $request->input('name'),
+            'status' => $request->input('status')
+        ];      
+
+        $response = Http::post('https://petstore.swagger.io/v2/pet', $petData);
+
+        if ($response->successful()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pet updated successfully',
+                'data' => $response->json(),
+            ], 201);
+        } 
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update pet',    
+        ]);  
+    }
+
 }
