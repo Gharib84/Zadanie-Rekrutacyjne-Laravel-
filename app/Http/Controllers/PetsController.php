@@ -5,12 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Redirect;
-
 
 class PetsController extends Controller
 {
@@ -50,7 +45,7 @@ class PetsController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $petData = [
             'name' => $request->input('name'),
@@ -61,37 +56,37 @@ class PetsController extends Controller
             }, explode(',', $request->input('tags'))),
             'status' => $request->input('status')
         ];
-        
+
         $response = Http::post('https://petstore.swagger.io/v2/pet', $petData);
 
         if ($response->successful()) {
-            return Redirect::route('pets.index')->with('success', 'Pet created successfully');
+            return response()->json([
+                'success' => true,
+                'message' => 'Pet created successfully',
+                'data' => $response->json(),
+            ], 201); // 201 is the HTTP status code for "Created"
         }
 
-        return Redirect::route('pets.index')->with('error', 'Failed to create pet');
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create pet',
+        ], 500);
     }
 
-    //edit
-    public function edit($id)
-    {
-        $response = Http::get('https://petstore.swagger.io/v2/pet/' . $id);
-
-        if ($response->successful()) {
-            return response()->json(['pet' => $response->json()]);
-        }
-
-        return response()->json(['error' => 'Failed to fetch pet'], Response::HTTP_INTERNAL_SERVER_ERROR);
-    }   
-
-    //delete
-    public function destroy($id)
+    public function destroy(Request $request, $id): JsonResponse
     {
         $response = Http::delete('https://petstore.swagger.io/v2/pet/' . $id);
 
         if ($response->successful()) {
-            return Redirect::route('pets.index')->with('success', 'Pet deleted successfully');
+            return response()->json([
+                'success' => true,
+                'message' => 'Pet deleted successfully',
+            ], 200);
         }
 
-        return Redirect::route('pets.index')->with('error', 'Failed to delete pet');
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to delete pet',
+        ], 500);
     }
 }

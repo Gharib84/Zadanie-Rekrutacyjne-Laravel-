@@ -5,19 +5,34 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/pet.js'])
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
     <div class="container mx-auto w-full p-10 h-screen mt-16">
+        @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+        @endif
+
+        @if (session('error'))
+        <div class="alert alert-error">
+            {{ session('error') }}
+        </div>
+        @endif
+
         <!--three items per row-->
         <div class="flex flex-col lg:flex-row justify-between items-center w-full mb-5 gap-y-4 lg:gap-y-0">
             <div class="filter w-full lg:w-auto">
-                <select class="select select-success">
-                    <option disabled selected>Pick a Runtime</option>
-                    <option value="available">available</option>
-                    <option value="pending">pending</option>
-                    <option value="sold">sold</option>
-                </select>
+                <form method="GET" action="{{ route('pets.index') }}">
+                    <select name="status" class="select select-success" onchange="this.form.submit()">
+                        <option disabled selected>Pick a Runtime</option>
+                        <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>available</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>pending</option>
+                        <option value="sold" {{ request('status') == 'sold' ? 'selected' : '' }}>sold</option>
+                    </select>
+                </form>
             </div>
             <div class="header">
                 <h1 class="text-3xl">Zadanie Rekrutacyjne Laravel</h1>
@@ -43,14 +58,12 @@
                     </thead>
                     <tbody id="pets-table-body">
                         @foreach ($pets as $pet)
-                        <tr>
+                        <tr id="pet-row-{{ $pet['id'] }}">
                             <td>{{ $pet['id'] }}</td>
                             <td>{{ $pet['name'] }}</td>
                             <td>{{ $pet['category']['name'] ?? 'brak' }}</td>
                             <td>
-                                @foreach ($pet['photoUrls'] as $photoUrl)
                                 <a href="{{ $photoUrl ?? 'brak' }}" class="text-yellow-500 font-bold">{{ $photoUrl ?? 'brak' }}</a>
-                                @endforeach
                             </td>
                             <td>
                                 @foreach ($pet['tags'] as $tag)
@@ -60,18 +73,14 @@
                             <td>{{ $pet['status'] ?? 'brak' }}</td>
                             <td class="flex gap-2">
                                 <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
-                                <form method="post">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-soft btn-error text-white">Usuń</button>
-                                </form>
+                                <button class="btn btn-soft btn-error text-white delete-pet-button" data-pet-id="{{ $pet['id'] }}" onclick="deletePet( `{{$pet['id']}}`)">Usuń</button>
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
                 <div class="mt-4">
-                    {{ $pets->links() }}
+                    {{ $pets->appends(['status' => request('status')])->links() }}
                 </div>
             </div>
         </div>
@@ -81,9 +90,9 @@
         <div class="modal-box">
             <h3 class="text-lg font-bold text-yellow-500">Stworz nowego peta</h3>
             <p class="py-4">
-            <form action="{{ route('pets.store') }}" method="post" id="create_pet">
+            <form id="create-pet-form" method="POST">
                 @csrf
-            <fieldset class="fieldset">
+                <fieldset class="fieldset">
                     <legend class="fieldset-legend">Pet szczegóły</legend>
                     <input type="text" name="name" class="input w-full" placeholder="Name" required />
                     <input type="text" name="category" class="input w-full mt-2" placeholder="Category" required />
@@ -96,62 +105,140 @@
                     </select>
                 </fieldset>
                 <div class="modal-action">
-                    <button class="btn btn-primary"type="submit">Save</button>
-                    <!-- if there is a button in form, it will close the modal -->
-                    <button class="btn">Close</button>
-            </div>
+                    <button type="button" class="btn btn-primary" onclick="submitPetForm()">Save</button>
+                    <button type="button" class="btn" onclick="add_new_pet.close()">Close</button>
+                </div>
             </form>
             </p>
         </div>
     </dialog>
-    <!--javascript-->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const select = document.querySelector('.select');
-            select.addEventListener('change', () => {
-                const selectedValue = select.value;
-                console.log(selectedValue);
-
-                const filterData = async () => {
-                    const response = await fetch('http://127.0.0.1:8000/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            status: selectedValue
-                        })
-                    });
-
-                    const data = await response.json();
-                    const petsTableBody = document.getElementById('pets-table-body');
-                    petsTableBody.innerHTML = '';
-
-                    data.pets.data.forEach(pet => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${pet.id}</td>
-                            <td>${pet.name}</td>
-                            <td>${pet.category.name ?? 'brak'}</td>
-                            <td>${pet.photoUrls.map(url => `<a href="${url}" class="text-yellow-500 font-bold">${url}</a>`).join('<br>')}</td>
-                            <td>${pet.tags.map(tag => `${tag.name ?? 'brak'}`).join('<br>')}</td>
-                            <td>${pet.status ?? 'brak'}</td>
-                            <td class="flex gap-2">
-                                <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
-                                <form method="post">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-soft btn-error text-white">Usuń</button>
-                                </form>
-                            </td>
-                        `;
-                        petsTableBody.appendChild(row);
-                    });
-                }
-                filterData();
+            const form = document.getElementById('create-pet-form');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                await submitPetForm();
             });
+
+            loadPetsFromSessionStorage();
         });
+
+        async function submitPetForm() {
+            const form = document.getElementById('create-pet-form');
+            const formData = new FormData(form);
+            const petData = {
+                name: formData.get('name'),
+                category: formData.get('category'),
+                photoUrls: formData.get('photoUrls'),
+                tags: formData.get('tags'),
+                status: formData.get('status'),
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/store', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify(petData),
+                });
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new TypeError('The server did not return a valid JSON response.');
+                }
+                const data = await response.json();
+                console.log(data);
+
+                if (!response.ok) {
+                    if (data.errors) {
+                        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+                        for (const [field, errors] of Object.entries(data.errors)) {
+                            const errorElement = document.getElementById(`${field}-error`);
+                            if (errorElement) {
+                                errorElement.textContent = errors[0];
+                            }
+                        }
+                    } else {
+                        alert(data.message || 'Failed to create pet');
+                    }
+                } else {
+                    alert(data.message || 'Pet created successfully');
+                    form.reset();
+                    addPetToTable(data.data);
+                    savePetToSessionStorage(data.data);
+                    add_new_pet.close();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            }
+        }
+
+        function addPetToTable(pet) {
+            const petsTableBody = document.getElementById('pets-table-body');
+            const row = document.createElement('tr');
+            row.id = `pet-row-${pet.id}`;
+            row.innerHTML = `
+        <td>${pet.id}</td>
+        <td>${pet.name}</td>
+        <td>${pet.category.name ?? 'brak'}</td>
+        <td>${pet.photoUrls.map(url => `<a href="${url}" class="text-yellow-500 font-bold">${url}</a>`).join('<br>')}</td>
+        <td>${pet.tags.map(tag => `${tag.name ?? 'brak'}`).join('<br>')}</td>
+        <td>${pet.status ?? 'brak'}</td>
+        <td class="flex gap-2">
+            <a href="" class="btn btn-soft btn-info text-white">Edytuj</a>
+            <button class="btn btn-soft btn-error text-white delete-pet-button" data-pet-id="${pet.id}" onclick="deletePet(${pet.id})">Usuń</button>
+        </td>
+    `;
+            petsTableBody.appendChild(row);
+        }
+
+        async function deletePet(id) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/destroy/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert(data.message || 'Pet deleted successfully');
+            document.getElementById(`pet-row-${id}`).remove();
+            removePetFromSessionStorage(id);
+        } else {
+            alert(data.message || 'Failed to delete pet');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An unexpected error occurred. Please try again.');
+    }
+}
+        function savePetToSessionStorage(pet) {
+            let pets = JSON.parse(sessionStorage.getItem('pets')) || [];
+            pets.push(pet);
+            sessionStorage.setItem('pets', JSON.stringify(pets));
+        }
+
+        function loadPetsFromSessionStorage() {
+            const pets = JSON.parse(sessionStorage.getItem('pets')) || [];
+            pets.forEach(pet => addPetToTable(pet));
+        }
+
+        function removePetFromSessionStorage(id) {
+            let pets = JSON.parse(sessionStorage.getItem('pets')) || [];
+            pets = pets.filter(pet => pet.id !== id);
+            sessionStorage.setItem('pets', JSON.stringify(pets));
+        }
     </script>
+
 </body>
+
 </html>
