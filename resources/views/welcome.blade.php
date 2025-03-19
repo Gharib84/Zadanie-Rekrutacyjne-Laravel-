@@ -4,25 +4,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/pet.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
     <div class="container mx-auto w-full p-10 h-screen mt-16">
-        @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-        @endif
-
-        @if (session('error'))
-        <div class="alert alert-error">
-            {{ session('error') }}
-        </div>
-        @endif
-
-        <!--three items per row-->
         <div class="flex flex-col lg:flex-row justify-between items-center w-full mb-5 gap-y-4 lg:gap-y-0">
             <div class="filter w-full lg:w-auto">
                 <form method="GET" action="{{ route('pets.index') }}">
@@ -79,7 +66,7 @@
                         </tr>
                         <!-- Global Edit Modal -->
                         <!--edit modal for pet-->
-                        <dialog id="edit_pet_{{$pet['id']}}" class="modal modal-bottom sm:modal-middle edit-pet-form">
+                        <dialog id="edit_pet_{{$pet['id']}}" class="modal modal-bottom sm:modal-middle">
                             <div class="modal-box">
                                 <h3 class="text-lg font-bold text-yellow-500">Edytuj peta: {{ $pet['name'] }}</h3>
                                 <p class="py-4">
@@ -97,7 +84,7 @@
                                         </select>
                                     </fieldset>
                                     <div class="modal-action">
-                                        <button type="button" class="btn btn-primary" onclick="editPet(`{{ $pet['id'] }}`)">Edytuj</button>
+                                        <button type="button" class="btn btn-primary" onclick="editPet(`{{ $pet['id'] }}`)">Save</button>
                                         <button type="button" class="btn" onclick="document.getElementById(`edit_pet_{{$pet['id']}}`).close()">Close</button>
                                     </div>
                                 </form>
@@ -265,14 +252,15 @@
                     },
                     body: JSON.stringify(petData),
                 });
-
                 const contentType = response.headers.get('content-type');
+
                 if (!contentType || !contentType.includes('application/json')) {
                     throw new TypeError('The server did not return a valid JSON response.');
                 }
 
                 const data = await response.json();
                 console.log(data);
+
                 if (!response.ok) {
                     if (data.errors) {
                         document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
@@ -287,6 +275,7 @@
                     }
                 } else {
                     alert(data.message || 'Pet created successfully');
+                    window.location.href = `http://127.0.0.1:8000/?status=${petData.status}`;
                     editForm.reset();
                     addPetToTable(data.data);
                     savePetToSessionStorage(data.data);
@@ -298,7 +287,7 @@
                 }
             } catch (error) {
                 console.log('Error:', error);
-                alert('An unexpected error occurred. Please try again.');
+
             }
         }
 
@@ -345,5 +334,4 @@
         }
     </script>
 </body>
-
 </html>
