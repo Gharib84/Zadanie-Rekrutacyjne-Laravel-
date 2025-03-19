@@ -64,7 +64,7 @@ class PetsController extends Controller
                 'success' => true,
                 'message' => 'Pet created successfully',
                 'data' => $response->json(),
-            ], 201); // 201 is the HTTP status code for "Created"
+            ], 201);
         }
 
         return response()->json([

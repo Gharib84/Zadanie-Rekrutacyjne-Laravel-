@@ -72,21 +72,18 @@
                             </td>
                             <td>{{ $pet['status'] ?? 'brak' }}</td>
                             <td class="flex gap-2">
-                                <button class="btn btn-soft btn-info text-white"
-                                    onclick="document.getElementById(`edit_pet_{{$pet['id']}}`).showModal()">
-                                    Edytuj
-                                </button>
+                                <button class="btn btn-soft btn-info text-white" onclick="openEditModal(`{{ $pet['id'] }}`)">Edytuj</button>
 
                                 <button class="btn btn-soft btn-error text-white delete-pet-button" data-pet-id="{{ $pet['id'] }}" onclick="deletePet( `{{$pet['id']}}`)">Usuń</button>
                             </td>
                         </tr>
                         <!-- Global Edit Modal -->
                         <!--edit modal for pet-->
-                        <dialog id="edit_pet_{{$pet['id']}}" class="modal modal-bottom sm:modal-middle">
+                        <dialog id="edit_pet_{{$pet['id']}}" class="modal modal-bottom sm:modal-middle edit-pet-form">
                             <div class="modal-box">
                                 <h3 class="text-lg font-bold text-yellow-500">Edytuj peta: {{ $pet['name'] }}</h3>
                                 <p class="py-4">
-                                <form id="edit-pet-form" method="POST">
+                                <form id="edit-pet-form-{{$pet['id']}}" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <input type="hidden" name="id" value="{{ $pet['id'] }}" id="edit-pet-id">
@@ -100,8 +97,8 @@
                                         </select>
                                     </fieldset>
                                     <div class="modal-action">
-                                        <button type="button" class="btn btn-primary" onclick="editPet( $pet['id'])">Edytuj</button>
-                                        <button type=" button" class="btn" onclick="edit_pet.close()">Close</button>
+                                        <button type="button" class="btn btn-primary" onclick="editPet(`{{ $pet['id'] }}`)">Edytuj</button>
+                                        <button type="button" class="btn" onclick="document.getElementById(`edit_pet_{{$pet['id']}}`).close()">Close</button>
                                     </div>
                                 </form>
                                 </p>
@@ -152,13 +149,13 @@
                 await submitPetForm();
             });
 
-            const editFornm = document.getElementById('edit-pet-form');
-            const editId = document.getElementById('edit-pet-button');
-            const id = editId.dataset.petIds;
-            editFornm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                await editPet(editId.dataset.petIds);
-            });
+            const editForm = document.querySelectorAll('.edit-pet-form');
+            editForm.forEach(form => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    await editPetForm(form);
+                });
+            })
 
             loadPetsFromSessionStorage();
         });
@@ -237,15 +234,29 @@
             petsTableBody.appendChild(row);
         }
 
+        function openEditModal(id) {
+            const row = document.getElementById(`pet-row-${id}`);
+            const petName = row.querySelector('td:nth-child(2)').textContent.trim();
+            const petStatus = row.querySelector('td:nth-child(6)').textContent.trim();
+
+            // Populate the modal form fields
+            document.getElementById('edit-pet-id').value = id;
+            document.getElementById('edit-pet-name').value = petName;
+            document.getElementById('edit-pet-status').value = petStatus;
+            const editModal = document.getElementById(`edit_pet_${id}`);
+            editModal.showModal();
+        }
         async function editPet(id) {
-            const editForm = document.getElementById('edit-pet-form');
-            const form = new FormData(editForm);
+            const form = document.getElementById(`edit-pet-form-${id}`);
+            const formData = new FormData(form);
             const petData = {
-                name: form.get('name'),
-                status: form.get('status'),
-            }
+                id: formData.get('id'),
+                name: formData.get('name'),
+                status: formData.get('status'),
+            };
+
             try {
-                const response = await fetch(`http://127.0.0.1:8000/edit/${id}`, {
+                const response = await fetch(`http://127.0.0.1:8000/edit/${petData.id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -280,9 +291,13 @@
                     addPetToTable(data.data);
                     savePetToSessionStorage(data.data);
                     edit_pet_`${id}`.close();
+                    const row = document.getElementById(`pet-row-${data.data.id}`);
+                    row.querySelector('td:nth-child(2)').textContent = data.data.name;
+                    row.querySelector('td:nth-child(6)').textContent = data.data.status ?? 'brak';
+                    document.getElementById(`edit_pet_${id}`).close();
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.log('Error:', error);
                 alert('An unexpected error occurred. Please try again.');
             }
         }
@@ -302,8 +317,7 @@
                 if (response.ok) {
                     alert(data.message || 'Pet deleted successfully');
                     document.getElementById(`pet-row-${id}`).remove();
-                    removePetFromSessionStorage(id);
-                    location.reload();
+                    removePetFromSessionStorage(`pet-row-${id}`);
                 } else {
                     alert(data.message || 'Failed to delete pet');
                 }
