@@ -1,4 +1,4 @@
-# Zadanie Rekrutacyjne Laravel 12 🚀# Zadanie 
+# Zadanie Rekrutacyjne Laravel 12 🚀
 
 ## Wymagania
 
